@@ -200,6 +200,27 @@ class Parser {
 		}
 	}
 
+	private function parseCalcHack(){
+
+		$sResult = null;
+		$sContent = null;
+
+		while (true) {
+			$sContent = $this->parseCharacter(false);
+
+			if ($sContent == ';') {
+				$this->iCurrentPosition--;
+				break;
+			}
+			if ($sContent === null) {
+				throw new SourceException("Non-well-formed quoted string {$this->peek(3)}", $this->iLineNo);
+			}
+			$sResult .= $sContent;
+		}
+
+		return $sResult;
+	}
+
 	private function parseIdentifier($bAllowFunctions = true, $bIgnoreCase = true) {
 		$sResult = $this->parseCharacter(true);
 		if ($sResult === null) {
@@ -438,6 +459,8 @@ class Parser {
 			$oValue = $this->parseStringValue();
 		} else if ($this->comes("progid:") && $this->oParserSettings->bLenientParsing) {
 			$oValue = $this->parseMicrosoftFilter();
+		} else if ($this->comes("calc")) {
+			$oValue = $this->parseCalcHack();
 		} else {
 			$oValue = $this->parseIdentifier(true, false);
 		}
